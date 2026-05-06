@@ -235,8 +235,8 @@ tr.clickable:hover { background: #fff5f5; }
 // ==================== 配置 ====================
 // 从 localStorage 读取已保存的 Supabase 配置，或使用默认值
 const SUPABASE_CONFIG = {
-  url: localStorage.getItem('sb_url') || '',
-  anonKey: localStorage.getItem('sb_key') || ''
+  url: localStorage.getItem('sb_url') || 'https://uneommfyllnipfllcfuc.supabase.co',
+  anonKey: localStorage.getItem('sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZW9tbWZ5bGxuaXBmbGxjZnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjM2MDcsImV4cCI6MjA5MzYzOTYwN30.S0n8DMM1ffqhuL4T5lLi87zUjzk-dYDUaxfqBoiUQ1Q'
 };
 
 let supabase = null;
