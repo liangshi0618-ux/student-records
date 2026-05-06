@@ -171,7 +171,7 @@ tr.clickable:hover { background: #fff5f5; }
         📥 导入 Word
         <input type="file" id="wordFileInput" accept=".docx" />
       </label>
-      <button class="btn btn-outline" onclick="exportJSON()">💾 导出备份</button>
+      <button class="btn btn-outline" onclick="exportTXT()">💾 导出备份</button>
     </div>
   </div>
 
@@ -893,7 +893,7 @@ async function confirmImport() {
 }
 
 // ==================== 导出 ====================
-async function exportJSON() {
+async function exportTXT() {
   if (!sb) { showToast('请先连接数据库'); return; }
   showToast('正在导出...');
 
@@ -902,11 +902,85 @@ async function exportJSON() {
   const { data: homework } = await sb.from('homework_records').select('*');
   const { data: exams } = await sb.from('exam_records').select('*');
 
-  const blob = new Blob([JSON.stringify({ students, daily_records: daily, homework_records: homework, exam_records: exams }, null, 2)], { type: 'application/json' });
+  let txt = '';
+  const sep = '='.repeat(60) + '\n';
+
+  txt += sep;
+  txt += '学生列表\n';
+  txt += sep;
+  if (students && students.length > 0) {
+    students.forEach((s, i) => {
+      txt += (i + 1) + '. 姓名: ' + (s.name || '') + '\n';
+      if (s.grade) txt += '   年级: ' + s.grade + '\n';
+      if (s.gender) txt += '   性别: ' + s.gender + '\n';
+      if (s.notes) txt += '   备注: ' + s.notes + '\n';
+      txt += '   创建时间: ' + (s.created_at || '') + '\n';
+      txt += '\n';
+    });
+  } else {
+    txt += '（无数据）\n\n';
+  }
+
+  txt += sep;
+  txt += '每日记录\n';
+  txt += sep;
+  if (daily && daily.length > 0) {
+    daily.forEach((d, i) => {
+      txt += (i + 1) + '. 日期: ' + (d.date || d.record_date || '') + '\n';
+      if (d.student_name) txt += '   学生: ' + d.student_name + '\n';
+      if (d.content) txt += '   内容: ' + d.content + '\n';
+      if (d.mood) txt += '   心情: ' + d.mood + '\n';
+      if (d.created_at) txt += '   创建时间: ' + d.created_at + '\n';
+      txt += '\n';
+    });
+  } else {
+    txt += '（无数据）\n\n';
+  }
+
+  txt += sep;
+  txt += '作业记录\n';
+  txt += sep;
+  if (homework && homework.length > 0) {
+    homework.forEach((h, i) => {
+      txt += (i + 1) + '. 日期: ' + (h.date || h.record_date || '') + '\n';
+      if (h.student_name) txt += '   学生: ' + h.student_name + '\n';
+      if (h.subject) txt += '   科目: ' + h.subject + '\n';
+      if (h.content) txt += '   内容: ' + h.content + '\n';
+      if (h.status) txt += '   状态: ' + h.status + '\n';
+      if (h.created_at) txt += '   创建时间: ' + h.created_at + '\n';
+      txt += '\n';
+    });
+  } else {
+    txt += '（无数据）\n\n';
+  }
+
+  txt += sep;
+  txt += '考试记录\n';
+  txt += sep;
+  if (exams && exams.length > 0) {
+    exams.forEach((e, i) => {
+      txt += (i + 1) + '. 日期: ' + (e.date || e.exam_date || '') + '\n';
+      if (e.student_name) txt += '   学生: ' + e.student_name + '\n';
+      if (e.subject) txt += '   科目: ' + e.subject + '\n';
+      if (e.score !== null && e.score !== undefined) txt += '   分数: ' + e.score + '\n';
+      if (e.total_score) txt += '   满分: ' + e.total_score + '\n';
+      if (e.rank) txt += '   排名: ' + e.rank + '\n';
+      if (e.notes) txt += '   备注: ' + e.notes + '\n';
+      if (e.created_at) txt += '   创建时间: ' + e.created_at + '\n';
+      txt += '\n';
+    });
+  } else {
+    txt += '（无数据）\n\n';
+  }
+
+  txt += sep;
+  txt += '导出时间: ' + new Date().toLocaleString('zh-CN') + '\n';
+
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `学生记录备份_${today()}.json`;
+  a.download = `学生记录备份_${today()}.txt`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('导出完成');
