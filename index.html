@@ -239,7 +239,7 @@ const SUPABASE_CONFIG = {
   anonKey: localStorage.getItem('sb_key') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuZW9tbWZ5bGxuaXBmbGxjZnVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjM2MDcsImV4cCI6MjA5MzYzOTYwN30.S0n8DMM1ffqhuL4T5lLi87zUjzk-dYDUaxfqBoiUQ1Q'
 };
 
-let supabase = null;
+let sb = null;
 let currentStudentId = null;
 let currentTab = 'daily';
 let studentsCache = [];
@@ -253,7 +253,7 @@ function initSupabase() {
     return false;
   }
   try {
-    supabase = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    sb = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
     updateConnStatus('online');
     return true;
   } catch(e) {
@@ -372,9 +372,9 @@ function showToast(msg) {
 
 // ==================== 学生管理 ====================
 async function loadStudents() {
-  if (!supabase) return;
+  if (!sb) return;
   document.getElementById('studentList').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  const { data, error } = await supabase.from('students').select('*').order('created_at', { ascending: true });
+  const { data, error } = await sb.from('students').select('*').order('created_at', { ascending: true });
   if (error) { showToast('加载学生失败: ' + error.message); return; }
   studentsCache = data || [];
   renderStudentList();
@@ -404,10 +404,10 @@ async function selectStudent(id) {
 }
 
 async function addStudent(name) {
-  if (!supabase) return;
+  if (!sb) return;
   const trimmed = name.trim();
   if (!trimmed) return;
-  const { data, error } = await supabase.from('students').insert({ name: trimmed }).select().single();
+  const { data, error } = await sb.from('students').insert({ name: trimmed }).select().single();
   if (error) { showToast('添加失败: ' + error.message); return; }
   studentsCache.push(data);
   document.getElementById('newStudentInput').value = '';
@@ -417,9 +417,9 @@ async function addStudent(name) {
 }
 
 async function deleteStudent(id) {
-  if (!supabase) return;
+  if (!sb) return;
   if (!confirm('确定删除该学生及其所有记录？此操作不可恢复。')) return;
-  const { error } = await supabase.from('students').delete().eq('id', id);
+  const { error } = await sb.from('students').delete().eq('id', id);
   if (error) { showToast('删除失败: ' + error.message); return; }
   studentsCache = studentsCache.filter(s => s.id !== id);
   if (currentStudentId === id) {
@@ -449,7 +449,7 @@ function renderCurrentTab() {
     document.getElementById('contentArea').innerHTML = '<div class="empty-state"><div class="icon">👈</div><p>请先在左侧添加或选择学生</p></div>';
     return;
   }
-  if (!supabase) {
+  if (!sb) {
     document.getElementById('contentArea').innerHTML = '<div class="empty-state"><div class="icon">🔌</div><p>请先连接数据库</p></div>';
     return;
   }
@@ -485,8 +485,8 @@ function renderDaily() {
 }
 
 async function loadDailyRecords() {
-  if (!supabase || !currentStudentId) return;
-  const { data, error } = await supabase
+  if (!sb || !currentStudentId) return;
+  const { data, error } = await sb
     .from('daily_records')
     .select('*')
     .eq('student_id', currentStudentId)
@@ -513,7 +513,7 @@ async function loadDailyRecords() {
 }
 
 async function addDailyRecord() {
-  if (!supabase || !currentStudentId) return;
+  if (!sb || !currentStudentId) return;
   const date = document.getElementById('dailyDate').value;
   const rating = parseInt(document.getElementById('dailyRating').value);
   const behavior = document.getElementById('dailyBehavior').value.trim();
@@ -521,7 +521,7 @@ async function addDailyRecord() {
   if (!date || !behavior) { showToast('请填写日期和表现描述'); return; }
   const btn = document.getElementById('dailyAddBtn');
   btn.disabled = true; btn.textContent = '保存中...';
-  const { error } = await supabase.from('daily_records').insert({
+  const { error } = await sb.from('daily_records').insert({
     student_id: currentStudentId, date, rating, behavior, notes
   });
   btn.disabled = false; btn.textContent = '添加';
@@ -552,8 +552,8 @@ function renderHomework() {
 }
 
 async function loadHomeworkRecords() {
-  if (!supabase || !currentStudentId) return;
-  const { data, error } = await supabase
+  if (!sb || !currentStudentId) return;
+  const { data, error } = await sb
     .from('homework_records')
     .select('*')
     .eq('student_id', currentStudentId)
@@ -580,7 +580,7 @@ async function loadHomeworkRecords() {
 }
 
 async function addHomeworkRecord() {
-  if (!supabase || !currentStudentId) return;
+  if (!sb || !currentStudentId) return;
   const date = document.getElementById('hwDate').value;
   const subject = document.getElementById('hwSubject').value.trim();
   const status = document.getElementById('hwStatus').value;
@@ -588,7 +588,7 @@ async function addHomeworkRecord() {
   if (!date || !subject) { showToast('请填写日期和科目'); return; }
   const btn = document.getElementById('hwAddBtn');
   btn.disabled = true; btn.textContent = '保存中...';
-  const { error } = await supabase.from('homework_records').insert({
+  const { error } = await sb.from('homework_records').insert({
     student_id: currentStudentId, date, subject, status, notes
   });
   btn.disabled = false; btn.textContent = '添加';
@@ -616,8 +616,8 @@ function renderExam() {
 }
 
 async function loadExamRecords() {
-  if (!supabase || !currentStudentId) return;
-  const { data, error } = await supabase
+  if (!sb || !currentStudentId) return;
+  const { data, error } = await sb
     .from('exam_records')
     .select('*')
     .eq('student_id', currentStudentId)
@@ -649,7 +649,7 @@ async function loadExamRecords() {
 }
 
 async function addExamRecord() {
-  if (!supabase || !currentStudentId) return;
+  if (!sb || !currentStudentId) return;
   const date = document.getElementById('examDate').value;
   const subject = document.getElementById('examSubject').value.trim();
   const score = parseFloat(document.getElementById('examScore').value);
@@ -658,7 +658,7 @@ async function addExamRecord() {
   if (!date || !subject || isNaN(score) || isNaN(totalScore)) { showToast('请完整填写日期、科目、分数'); return; }
   const btn = document.getElementById('examAddBtn');
   btn.disabled = true; btn.textContent = '保存中...';
-  const { error } = await supabase.from('exam_records').insert({
+  const { error } = await sb.from('exam_records').insert({
     student_id: currentStudentId, date, subject, score, total_score: totalScore, notes
   });
   btn.disabled = false; btn.textContent = '添加';
@@ -668,16 +668,16 @@ async function addExamRecord() {
 
 // ==================== 通用删除 ====================
 async function deleteRecord(table, recordId) {
-  if (!supabase) return;
-  const { error } = await supabase.from(table).delete().eq('id', recordId);
+  if (!sb) return;
+  const { error } = await sb.from(table).delete().eq('id', recordId);
   if (error) { showToast('删除失败: ' + error.message); return; }
   renderCurrentTab();
 }
 
 // ==================== 考试成绩对比 ====================
 async function openExamCompare(subject) {
-  if (!supabase || !currentStudentId) return;
-  const { data, error } = await supabase
+  if (!sb || !currentStudentId) return;
+  const { data, error } = await sb
     .from('exam_records')
     .select('*')
     .eq('student_id', currentStudentId)
@@ -845,7 +845,7 @@ document.getElementById('importModal').addEventListener('click', function(e) {
 });
 
 async function confirmImport() {
-  if (!supabase || !currentStudentId) { showToast('请先选择学生'); return; }
+  if (!sb || !currentStudentId) { showToast('请先选择学生'); return; }
   const targetTab = document.getElementById('importTargetTab').value;
   let count = 0;
 
@@ -861,21 +861,21 @@ async function confirmImport() {
         let rating = 3;
         const m = value.match(/(\d)/);
         if (m) { const r = parseInt(m[1]); if (r >= 1 && r <= 5) rating = r; }
-        const res = await supabase.from('daily_records').insert({ student_id: currentStudentId, date, rating, behavior: detail, notes });
+        const res = await sb.from('daily_records').insert({ student_id: currentStudentId, date, rating, behavior: detail, notes });
         error = res.error; break;
       }
       case 'homework': {
         let status = '完成';
         if (/未|否|没|✗|×/i.test(value)) status = '未完成';
         else if (/部分|半/i.test(value)) status = '部分完成';
-        const res = await supabase.from('homework_records').insert({ student_id: currentStudentId, date, subject: detail, status, notes });
+        const res = await sb.from('homework_records').insert({ student_id: currentStudentId, date, subject: detail, status, notes });
         error = res.error; break;
       }
       case 'exam': {
         const nums = value.match(/[\d.]+/g);
         const score = nums ? parseFloat(nums[0]) : 0;
         const total = nums && nums.length > 1 ? parseFloat(nums[1]) : 100;
-        const res = await supabase.from('exam_records').insert({ student_id: currentStudentId, date, subject: detail, score, total_score: total, notes });
+        const res = await sb.from('exam_records').insert({ student_id: currentStudentId, date, subject: detail, score, total_score: total, notes });
         error = res.error; break;
       }
     }
@@ -890,13 +890,13 @@ async function confirmImport() {
 
 // ==================== 导出 ====================
 async function exportJSON() {
-  if (!supabase) { showToast('请先连接数据库'); return; }
+  if (!sb) { showToast('请先连接数据库'); return; }
   showToast('正在导出...');
 
-  const { data: students } = await supabase.from('students').select('*');
-  const { data: daily } = await supabase.from('daily_records').select('*');
-  const { data: homework } = await supabase.from('homework_records').select('*');
-  const { data: exams } = await supabase.from('exam_records').select('*');
+  const { data: students } = await sb.from('students').select('*');
+  const { data: daily } = await sb.from('daily_records').select('*');
+  const { data: homework } = await sb.from('homework_records').select('*');
+  const { data: exams } = await sb.from('exam_records').select('*');
 
   const blob = new Blob([JSON.stringify({ students, daily_records: daily, homework_records: homework, exam_records: exams }, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
