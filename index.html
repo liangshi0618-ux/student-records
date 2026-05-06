@@ -112,6 +112,10 @@ tr.clickable:hover { background: #fff5f5; }
 .import-preview table { font-size: 12px; }
 .import-preview td, .import-preview th { padding: 6px 10px; }
 
+/* 文件输入 */
+.file-input-wrap { position: relative; display: inline-block; overflow: hidden; }
+.file-input-wrap input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
 /* 设置面板 */
 .setup-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
 .setup-banner h3 { font-size: 15px; color: #856404; margin-bottom: 8px; }
@@ -165,7 +169,7 @@ tr.clickable:hover { background: #fff5f5; }
     <div class="header-actions">
       <label class="btn btn-outline file-input-wrap">
         📥 导入 Word
-        <input type="file" id="wordFileInput" accept=".docx" style="position:absolute;inset:0;opacity:0;cursor:pointer;" />
+        <input type="file" id="wordFileInput" accept=".docx" />
       </label>
       <button class="btn btn-outline" onclick="exportJSON()">💾 导出备份</button>
     </div>
